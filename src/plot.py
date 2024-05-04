@@ -75,7 +75,7 @@ def bitrate_smo(outputs):
                 # if np.mean(arr[1:]) > -100.:
                 mean_arr.append(np.mean(arr[1:]))
                 mean_bit.append(np.mean(bitrate[:]))
-                mean_rebuf.append(np.sum(rebuffer[:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[:])) * 100.)
+                mean_rebuf.append(np.sum(rebuffer[1:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[1:])) * 100.)
                 mean_smo.append(np.mean(np.abs(np.diff(bitrate))))
         reward_all[scheme] = mean_arr
         mean_, low_, high_ = mean_confidence_interval(mean_bit)
@@ -147,7 +147,7 @@ def smo_rebuf(outputs):
                 # if np.mean(arr[1:]) > -100.:
                 mean_arr.append(np.mean(arr[1:]))
                 mean_bit.append(np.mean(bitrate[:]))
-                mean_rebuf.append(np.sum(rebuffer[:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[:])) * 100.)
+                mean_rebuf.append(np.sum(rebuffer[1:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[1:])) * 100.)
                 mean_smo.append(np.mean(np.abs(np.diff(bitrate))))
         reward_all[scheme] = mean_arr
         mean_, low_, high_ = mean_confidence_interval(mean_smo)
@@ -166,7 +166,7 @@ def smo_rebuf(outputs):
 
     ax.set_xlabel('Time Spent on Stall (%)')
     ax.set_ylabel('Bitrate Smoothness (mbps)')
-    ax.set_ylim(0., max_bitrate * 1.5)
+    ax.set_ylim(0.05, max_bitrate + 0.05)
 
     ax.grid(linestyle='--', linewidth=1., alpha=0.5)
     ax.spines['top'].set_visible(False)
@@ -219,7 +219,7 @@ def bitrate_rebuf(outputs):
                 # if np.mean(arr[1:]) > -100.:
                 mean_arr.append(np.mean(arr[1:]))
                 mean_bit.append(np.mean(bitrate[:]))
-                mean_rebuf.append(np.sum(rebuffer[:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[:])) * 100.)
+                mean_rebuf.append(np.sum(rebuffer[1:]) / (VIDEO_LEN * 4. + np.sum(rebuffer[1:])) * 100.)
                 mean_smo.append(np.mean(np.abs(np.diff(bitrate))))
         reward_all[scheme] = mean_arr
         mean_, low_, high_ = mean_confidence_interval(mean_bit)
@@ -262,7 +262,7 @@ def qoe_cdf(outputs):
     plt.rcParams['axes.labelsize'] = 15
     font = {'size': 15}
     matplotlib.rc('font', **font)
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig, ax = plt.subplots(figsize=(12, 3.5))
     plt.subplots_adjust(left=0.06, bottom=0.16, right=0.96, top=0.96)
 
     max_bitrate = 0
