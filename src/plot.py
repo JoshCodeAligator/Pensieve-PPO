@@ -8,7 +8,7 @@ from collections import OrderedDict
 import scipy.stats
 plt.switch_backend('agg')
 
-NUM_BINS = 10000
+NUM_BINS = 500
 BITS_IN_BYTE = 8.0
 MILLISEC_IN_SEC = 1000.0
 M_IN_B = 1000000.0
@@ -293,7 +293,7 @@ def qoe_cdf(outputs):
     ax.set_xlabel('QoE')
     ax.set_ylabel('CDF')
     ax.set_ylim(0., 1.01)
-    ax.set_xlim(-0.2, 2.)
+    ax.set_xlim(0., 1.8)
 
     ax.grid(linestyle='--', linewidth=1., alpha=0.5)
     ax.spines['top'].set_visible(False)
