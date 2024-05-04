@@ -2,6 +2,8 @@
 
 ### Updates
 
+**May. 4, 2024:** We removed the Elastic, revised  BOLA, and add new baseline Genet [2].
+
 **Jan. 26, 2024:** We are excited to announce significant updates to Pensieve-PPO! We have replaced TensorFlow with PyTorch, and we have achieved a similar training speed while training models that rival in performance.
 
 *For the TensorFlow version, please check [Pensieve-PPO TF Branch](https://github.com/godka/Pensieve-PPO/tree/master).*
@@ -37,7 +39,9 @@ We have also added a pretrained model, which can be found at [this link](https:/
 <p align="center">
     <img src="src/baselines-br.png" width="33%"><img src="src/baselines-sr.png" width="33%"><img src="src/baselines-bs.png" width="33%">
 </p>
-
+<p align="center">
+    <img src="src/baselines-qoe.png" width="100%">
+</p>
 If you have any questions or require further assistance, please don't hesitate to reach out.
 
 ## Additional Reinforcement Learning Algorithms
@@ -48,3 +52,5 @@ For more implementations of reinforcement learning algorithms, please visit the 
 - SAC: [Pensieve-PPO SAC Branch](https://github.com/godka/Pensieve-PPO/tree/SAC) or [Pensieve-SAC Repository](https://github.com/godka/Pensieve-SAC)
 
 [1] Mao H, Netravali R, Alizadeh M. Neural adaptive video streaming with Pensieve[C]//Proceedings of the Conference of the ACM Special Interest Group on Data Communication. ACM, 2017: 197-210.
+
+[2] Xia, Zhengxu, et al. "Genet: automatic curriculum generation for learning adaptation in networking." Proceedings of the ACM SIGCOMM 2022 Conference. 2022.
