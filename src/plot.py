@@ -17,7 +17,7 @@ K_IN_M = 1000.0
 REBUF_P = 4.3
 SMOOTH_P = 1
 
-# labels = SCHEMES#, 'RB']
+# labels = SCHEMES#, 'netllm']
 LW = 1.5
 LOG = './baselines/'
 
@@ -37,8 +37,8 @@ def inlist(filename, traces):
     return ret
 
 def bitrate_smo(outputs):
-    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'rb', 'quetra', 'genet', 'ppo']
-    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'Rate-based', 'QUETRA', 'Genet', 'Pen-PPO']
+    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'netllm', 'quetra', 'genet', 'ppo']
+    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'NetLLM', 'QUETRA', 'Genet', 'Pen-PPO']
     markers = ['o','x','v','^','>','<','s','p','*','h','H','D','d','1']
     lines = ['-', '--', '-.', ':', '-', '--', '-.', ':', '-']
     modern_academic_colors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F']
@@ -109,8 +109,8 @@ def bitrate_smo(outputs):
 
 def smo_rebuf(outputs):
     # os.system('cp ./test_results/* ' + LOG)
-    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'rb', 'quetra', 'genet', 'ppo']
-    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'Rate-based', 'QUETRA', 'Genet', 'Pen-PPO']
+    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'netllm', 'quetra', 'genet', 'ppo']
+    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'NetLLM', 'QUETRA', 'Genet', 'Pen-PPO']
     markers = ['o','x','v','^','>','<','s','p','*','h','H','D','d','1']
     lines = ['-', '--', '-.', ':', '-', '--', '-.', ':', '-']
     modern_academic_colors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F']
@@ -181,8 +181,8 @@ def smo_rebuf(outputs):
 
 def bitrate_rebuf(outputs):
     # os.system('cp ./test_results/* ' + LOG)
-    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'rb', 'quetra', 'genet', 'ppo']
-    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'Rate-based', 'QUETRA', 'Genet', 'Pen-PPO']
+    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'netllm', 'quetra', 'genet', 'ppo']
+    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'NetLLM', 'QUETRA', 'Genet', 'Pen-PPO']
     markers = ['o','x','v','^','>','<','s','p','*','h','H','D','d','1']
     lines = ['-', '--', '-.', ':', '-', '--', '-.', ':', '-']
     modern_academic_colors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F']
@@ -253,8 +253,8 @@ def bitrate_rebuf(outputs):
 
 def qoe_cdf(outputs):
     # os.system('cp ./test_results/* ' + LOG)
-    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'rb', 'quetra', 'genet', 'ppo']
-    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'Rate-based', 'QUETRA', 'Genet', 'Pen-PPO']
+    SCHEMES = ['bb', 'rl', 'mpc', 'cmc', 'bola', 'netllm', 'quetra', 'genet', 'ppo']
+    labels = ['BBA', 'Pensieve', 'RobustMPC', 'Comyco', 'BOLA', 'NetLLM', 'QUETRA', 'Genet', 'Pen-PPO']
     modern_academic_colors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F']
 
     reward_all = {}

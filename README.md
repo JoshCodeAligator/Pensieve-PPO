@@ -2,6 +2,8 @@
 
 ### Updates
 
+**Jan. 18, 2025:** We removed the rate-based method and added NetLLM [4].
+
 **May. 4, 2024:** We removed the Elastic, revised  BOLA, and add new baseline Comyco [3] and Genet [2].
 
 **Jan. 26, 2024:** We are excited to announce significant updates to Pensieve-PPO! We have replaced TensorFlow with PyTorch, and we have achieved a similar training speed while training models that rival in performance.
@@ -56,3 +58,11 @@ For more implementations of reinforcement learning algorithms, please visit the 
 [2] Xia, Zhengxu, et al. "Genet: automatic curriculum generation for learning adaptation in networking." Proceedings of the ACM SIGCOMM 2022 Conference. 2022.
 
 [3] Huang, Tianchi, et al. "Comyco: Quality-aware adaptive video streaming via imitation learning." Proceedings of the 27th ACM international conference on multimedia. 2019.
+
+[4] Wu, Duo, et al. "Netllm: Adapting large language models for networking." Proceedings of the ACM SIGCOMM 2024 Conference. 2024.
+
+* We use the following command to test the entire traces
+
+```
+python run_plm.py --test --plm-type llama --plm-size base --rank 128 --device cuda:0 --trace-num -1 --model-dir  data/ft_plms/try_llama2_7b
+```
