@@ -61,7 +61,7 @@ For more implementations of reinforcement learning algorithms, please visit the 
 
 [4] Wu, Duo, et al. "Netllm: Adapting large language models for networking." Proceedings of the ACM SIGCOMM 2024 Conference. 2024.
 
-* We use the following command to test the entire traces
+* We use the following command to test the *entire traces* in the dataset.
 
 ```
 python run_plm.py --test --plm-type llama --plm-size base --rank 128 --device cuda:0 --trace-num -1 --model-dir  data/ft_plms/try_llama2_7b
