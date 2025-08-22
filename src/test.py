@@ -1,154 +1,101 @@
 import os
-import sys
-os.environ['CUDA_VISIBLE_DEVICES']='-1'
+import re
+import glob
+import argparse
 import numpy as np
-import load_trace
-#import a2c as network
+
 import ppo2 as network
-import fixed_env as env
+from env_layered import LayeredEnv
+
+TEST_LOG_FOLDER = './test_results/'
+SUMMARY_DIR = './ppo'   # where train.py saves checkpoints
+BEST_MODEL_PATH = os.path.join(SUMMARY_DIR, 'best.pth')
 
 
-S_INFO = 6  # bit_rate, buffer_size, next_chunk_size, bandwidth_measurement(throughput and time), chunk_til_video_end
-S_LEN = 8  # take how many frames in the past
-A_DIM = 6
-ACTOR_LR_RATE = 0.0001
-CRITIC_LR_RATE = 0.001
-VIDEO_BIT_RATE = [300,750,1200,1850,2850,4300]  # Kbps
-BUFFER_NORM_FACTOR = 10.0
-CHUNK_TIL_VIDEO_END_CAP = 48.0
-M_IN_K = 1000.0
-REBUF_PENALTY = 4.3  # 1 sec rebuffering -> 3 Mbps
-SMOOTH_PENALTY = 1
-DEFAULT_QUALITY = 1  # default video quality without agent
-RANDOM_SEED = 42
-RAND_RANGE = 1000
-LOG_FILE = './test_results/log_sim_ppo'
-TEST_TRACES = './test/'
-# log in format of time_stamp bit_rate buffer_size rebuffer_time chunk_size download_time reward
-NN_MODEL = sys.argv[1]
-    
+def _latest_ckpt(pattern=os.path.join(SUMMARY_DIR, 'nn_model_ep_*.pth')):
+  files = glob.glob(pattern)
+  if not files:
+    return None
+  def _ep(path):
+    m = re.search(r'ep_(\d+)\.pth$', os.path.basename(path))
+    return int(m.group(1)) if m else -1
+  return max(files, key=_ep)
+
+
 def main():
+  parser = argparse.ArgumentParser(
+    description="Evaluate a trained policy on the layered BL/E1/E2 environment."
+  )
+  parser.add_argument(
+    'model_path',
+    nargs='?',
+    default='latest',
+    help="Path to .pth checkpoint, or 'latest'/'best' to auto-pick from ./ppo"
+  )
+  parser.add_argument(
+    '--stochastic',
+    action='store_true',
+    help='Sample an action from the policy instead of greedy argmax.'
+  )
+  args = parser.parse_args()
 
-    np.random.seed(RANDOM_SEED)
+  os.makedirs(TEST_LOG_FOLDER, exist_ok=True)
+  log_path = os.path.join(TEST_LOG_FOLDER, 'eval.txt')
+  f = open(log_path, 'w')
 
-    assert len(VIDEO_BIT_RATE) == A_DIM
+  if args.model_path in ('latest', 'best'):
+    if args.model_path == 'best' and os.path.isfile(BEST_MODEL_PATH):
+      model_path = BEST_MODEL_PATH
+    else:
+      model_path = _latest_ckpt()
+    if model_path is None:
+      print("No checkpoints found in ./ppo. Provide an explicit path: python src/test.py /path/to/model.pth")
+      return
+  else:
+    model_path = args.model_path
 
-    all_cooked_time, all_cooked_bw, all_file_names = load_trace.load_trace(TEST_TRACES)
+  # Build env and net (layered BL/E1/E2 setup)
+  env = LayeredEnv(video_id="video_01", sizes_path="assets/sizes.json")
+  state = env.reset()
+  S_DIM = state.shape[0]
+  A_DIM = 3
 
-    net_env = env.Environment(all_cooked_time=all_cooked_time,
-                              all_cooked_bw=all_cooked_bw)
+  actor = network.Network(state_dim=S_DIM, action_dim=A_DIM, learning_rate=1e-4)
+  try:
+    actor.load_model(model_path)
+  except Exception as e:
+    print(f"Failed to load model '{model_path}': {e}")
+    return
 
-    log_path = LOG_FILE + '_' + all_file_names[net_env.trace_idx]
-    log_file = open(log_path, 'w')
+  done = False
+  step = 0
+  rng = np.random.RandomState(123)
 
+  while not done:
+    # policy inference
+    probs = actor.predict(np.asarray(state, dtype=np.float32))
+    probs = np.clip(probs, 1e-8, 1.0)
+    probs = probs / probs.sum()
 
-    actor = network.Network(state_dim=[S_INFO, S_LEN], action_dim=A_DIM,
-        learning_rate=ACTOR_LR_RATE)
+    # entropy for logging (avoid log(0))
+    eps = 1e-12
+    entropy = -float(np.sum(probs * np.log(probs + eps)))
 
-    # restore neural net parameters
-    if NN_MODEL is not None:  # NN_MODEL is the path to file
-        actor.load_model(NN_MODEL)
-        print("Testing model restored.")
+    if args.stochastic:
+      action = int(rng.choice(A_DIM, p=probs))
+    else:
+      action = int(np.argmax(probs))
 
-    time_stamp = 0
+    state, reward, done, info = env.step(action)
 
-    last_bit_rate = DEFAULT_QUALITY
-    bit_rate = DEFAULT_QUALITY
+    # IMPORTANT: last two fields must remain (entropy, reward) for train.py parser
+    f.write(f"{step} {entropy} {reward}\n")
+    step += 1
 
-    action_vec = np.zeros(A_DIM)
-    action_vec[bit_rate] = 1
-
-    s_batch = [np.zeros((S_INFO, S_LEN))]
-    a_batch = [action_vec]
-    r_batch = []
-    entropy_record = []
-    entropy_ = 0.5
-    video_count = 0
-    
-    while True:  # serve video forever
-        # the action is from the last decision
-        # this is to make the framework similar to the real
-        delay, sleep_time, buffer_size, rebuf, \
-        video_chunk_size, next_video_chunk_sizes, \
-        end_of_video, video_chunk_remain = \
-            net_env.get_video_chunk(bit_rate)
-
-        time_stamp += delay  # in ms
-        time_stamp += sleep_time  # in ms
-
-        # reward is video quality - rebuffer penalty - smoothness
-        reward = VIDEO_BIT_RATE[bit_rate] / M_IN_K \
-                    - REBUF_PENALTY * rebuf \
-                    - SMOOTH_PENALTY * np.abs(VIDEO_BIT_RATE[bit_rate] -
-                                            VIDEO_BIT_RATE[last_bit_rate]) / M_IN_K
-
-        r_batch.append(reward)
-
-        last_bit_rate = bit_rate
-
-        # log time_stamp, bit_rate, buffer_size, reward
-        log_file.write(str(time_stamp / M_IN_K) + '\t' +
-                        str(VIDEO_BIT_RATE[bit_rate]) + '\t' +
-                        str(buffer_size) + '\t' +
-                        str(rebuf) + '\t' +
-                        str(video_chunk_size) + '\t' +
-                        str(delay) + '\t' +
-                        str(entropy_) + '\t' + 
-                        str(reward) + '\n')
-        log_file.flush()
-
-        # retrieve previous state
-        if len(s_batch) == 0:
-            state = [np.zeros((S_INFO, S_LEN))]
-        else:
-            state = np.array(s_batch[-1], copy=True)
-
-        # dequeue history record
-        state = np.roll(state, -1, axis=1)
-
-        # this should be S_INFO number of terms
-        state[0, -1] = VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))  # last quality
-        state[1, -1] = buffer_size / BUFFER_NORM_FACTOR  # 10 sec
-        state[2, -1] = float(video_chunk_size) / float(delay) / M_IN_K  # kilo byte / ms
-        state[3, -1] = float(delay) / M_IN_K / BUFFER_NORM_FACTOR  # 10 sec
-        state[4, :A_DIM] = np.array(next_video_chunk_sizes) / M_IN_K / M_IN_K  # mega byte
-        state[5, -1] = np.minimum(video_chunk_remain, CHUNK_TIL_VIDEO_END_CAP) / float(CHUNK_TIL_VIDEO_END_CAP)
-
-        action_prob = actor.predict(np.reshape(state, (1, S_INFO, S_LEN)))
-        noise = np.random.gumbel(size=len(action_prob))
-        bit_rate = np.argmax(np.log(action_prob) + noise)
-        
-        s_batch.append(state)
-        entropy_ = -np.dot(action_prob, np.log(action_prob))
-        entropy_record.append(entropy_)
-
-        if end_of_video:
-            log_file.write('\n')
-            log_file.close()
-
-            last_bit_rate = DEFAULT_QUALITY
-            bit_rate = DEFAULT_QUALITY  # use the default action here
-
-            del s_batch[:]
-            del a_batch[:]
-            del r_batch[:]
-
-            action_vec = np.zeros(A_DIM)
-            action_vec[bit_rate] = 1
-
-            s_batch.append(np.zeros((S_INFO, S_LEN)))
-            a_batch.append(action_vec)
-            # print(np.mean(entropy_record))
-            entropy_record = []
-
-            video_count += 1
-
-            if video_count >= len(all_file_names):
-                break
-
-            log_path = LOG_FILE + '_' + all_file_names[net_env.trace_idx]
-            log_file = open(log_path, 'w')
+  f.close()
+  print(f"Evaluated checkpoint: {model_path}")
+  print(f"Wrote log: {log_path}")
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+  main()

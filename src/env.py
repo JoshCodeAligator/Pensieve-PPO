@@ -23,7 +23,6 @@ EPS = 1e-6
 
 
 class ABREnv():
-
     def __init__(self, random_seed=RANDOM_SEED):
         np.random.seed(random_seed)
         all_cooked_time, all_cooked_bw, _ = load_trace.load_trace()

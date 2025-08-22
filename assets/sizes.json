@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "description": "Layered video sizes for RL ABR (Zheng Liu coding config). Units are bits per chunk. Chunks are 2s each.",
+    "unit": "bits",
+    "layers": ["S_BL", "S_E1", "S_E2"],
+    "chunk_duration_s_default": 2
+  },
+  "channels": ["CH01","CH02","CH03","CH04","CH05","CH06","CH07","CH08","CH09","CH10"],
+  "channel_map": {
+    "CH01": "video_01",
+    "CH02": "video_01",
+    "CH03": "video_01",
+    "CH04": "video_01",
+    "CH05": "video_01",
+    "CH06": "video_01",
+    "CH07": "video_01",
+    "CH08": "video_01",
+    "CH09": "video_01",
+    "CH10": "video_01"
+  },
+  "video_01": {
+    "chunk_duration_s": 2,
+    "chunks": [
+      { "S_BL": 7650000,  "S_E1": 3350000,  "S_E2": 1950000 },
+      { "S_BL": 18200000, "S_E1": 2100000,  "S_E2": 8400000 },
+      { "S_BL": 18750000, "S_E1": 7350000,  "S_E2": 11400000 },
+      { "S_BL": 39600000, "S_E1": 19400000, "S_E2": 5000000 },
+      { "S_BL": 7000000,  "S_E1": 1650000,  "S_E2": 4500000 },
+      { "S_BL": 11200000, "S_E1": 5400000,  "S_E2": 2700000 },
+      { "S_BL": 24600000, "S_E1": 12300000, "S_E2": 6150000 },
+      { "S_BL": 35000000, "S_E1": 9000000,  "S_E2": 13800000 },
+      { "S_BL": 13800000, "S_E1": 7700000,  "S_E2": 3500000 },
+      { "S_BL": 9550000,  "S_E1": 1450000,  "S_E2": 4400000 }
+    ]
+  }
+}
