@@ -15,5 +15,5 @@ class LayerSizeDB:
         rec = recs[kw]
         return rec["S_BL"], rec["S_E1"], rec["S_E2"]
 
-    def num_chunks(self, video_id: str) -> int:
-        return len(self.db[video_id]["chunks"])
+    def num_chunks(self, vid: str) -> int:
+        return len(self.db[vid]["chunks"])

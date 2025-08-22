@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "description": "Layered video sizes for RL ABR (Zheng Liu coding config). Units are bits per chunk. Chunks are 2s each.",
+    "description": "Layered video sizes for RL (Zheng Liu coding config). Units are bits per chunk. Chunks are 2s each.",
     "unit": "bits",
     "layers": ["S_BL", "S_E1", "S_E2"],
     "chunk_duration_s_default": 2

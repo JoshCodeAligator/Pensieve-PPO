@@ -9,10 +9,9 @@ from config_layered import (
 class LayeredEnv:
     """
     One client, one video/channel.
-    Action space: 0=EL1, 1=EL2, 2=SKIP
+    Action space: 0=BL, 1=BL+EL1, 2=BL+EL2
     """
     def __init__(self, video_id: str, sizes_path: str):
-        # --- normalization / scale constants (define BEFORE reset) ---
         self._tp_scale = 1e6   # scale throughput from bps -> ~Mbps order
         self._dt_scale = 5.0   # normalize download-time/history to ~[0,1]
         self._eps      = 1e-6  # numerical safety
@@ -36,6 +35,12 @@ class LayeredEnv:
         return self._state()
 
     def step(self, action: int):
+        if self.done or self.k >= self.N:
+            # don’t advance; just report terminal
+            return self._state(), 0.0, True, {"terminal": True}
+        
+        action = int(np.clip(action, 0, 2))
+
         # sizes for this chunk (bits), duration
         S_BL, S_E1, S_E2 = self.db.get_sizes_bits(self.vid, self.k)
         L = CHUNK_SEC

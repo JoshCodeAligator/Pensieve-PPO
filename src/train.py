@@ -159,6 +159,13 @@ def central_agent(net_params_queues: List[mp.Queue], exp_queues: List[mp.Queue])
                 writer.add_scalar('train/value_loss', logs.get('value_loss', 0.0), epoch)
                 writer.flush()
 
+        # --- signal all agents to stop (poison-pill) ---
+        for q in net_params_queues:
+            try:
+                q.put(None)
+            except Exception:
+                pass
+
     print('[central] finished')
 
 
@@ -167,8 +174,11 @@ def agent(agent_id: int, net_params_queue: mp.Queue, exp_queue: mp.Queue):
     env = LayeredEnv(video_id="video_01", sizes_path="assets/sizes.json")
     actor = network.Network(state_dim=S_DIM, action_dim=A_DIM, learning_rate=ACTOR_LR_RATE)
 
-    # wait for initial params
-    actor.set_network_params(net_params_queue.get())
+    # wait for initial params (handle stop sentinel None)
+    params = net_params_queue.get()
+    if params is None:
+        return
+    actor.set_network_params(params)
 
     rng = np.random.RandomState(RANDOM_SEED + agent_id)
 
@@ -211,8 +221,11 @@ def agent(agent_id: int, net_params_queue: mp.Queue, exp_queue: mp.Queue):
 
         exp_queue.put([s_batch, a_batch, p_batch, v_batch])
 
-        # pull latest params for next rollout
-        actor.set_network_params(net_params_queue.get())
+        # pull latest params for next rollout (or stop if sentinel)
+        params = net_params_queue.get()
+        if params is None:
+            break
+        actor.set_network_params(params)
 
 
 # ---- Orchestration ----
@@ -235,6 +248,9 @@ def main():
 
     try:
         coordinator.join()
+        # central has finished and sent stop signals; wait for agents to exit
+        for p in agents:
+            p.join(timeout=5)
     except KeyboardInterrupt:
         print('\n[main] KeyboardInterrupt: terminating children...')
         for p in agents:
@@ -243,10 +259,22 @@ def main():
         if coordinator.is_alive():
             coordinator.terminate()
     finally:
+        # ensure agents exit; terminate any stragglers
         for p in agents:
-            p.join(timeout=1)
+            if p.is_alive():
+                p.terminate()
+        for p in agents:
+            p.join(timeout=2)
         if coordinator.is_alive():
-            coordinator.join(timeout=1)
+            coordinator.terminate()
+            coordinator.join(timeout=2)
+        # close queues to avoid hanging on interpreter shutdown
+        for q in net_params_queues + exp_queues:
+            try:
+                q.close()
+                q.cancel_join_thread()
+            except Exception:
+                pass
 
 
 if __name__ == '__main__':
