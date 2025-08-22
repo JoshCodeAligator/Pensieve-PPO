@@ -4,6 +4,7 @@ OVH_SEC   = 0.15         # per-request overhead (RTT etc.); set 0 if you want to
 BUFFER_NORM_SEC = 10.0
 COLDSTART_MBPS = 3.0     
 
+
 # --- reward (per slides: ignore rebuffer; alpha+beta=1) ---
 ALPHA = 0.7              # weight on quality utility
 BETA  = 0.3              # weight on quality change
